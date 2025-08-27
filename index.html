@@ -419,5 +419,31 @@ canvas.addEventListener('touchend', (e) => {
   downloadBtn.disabled = true;
 })();
 </script>
+
+<footer id="footer">
+  <p>© seundanjuma 2025</p>
+</footer>
+
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #main {
+    flex: 1; /* pushes footer down */
+  }
+
+  #footer {
+    padding: 15px 0;
+    text-align: center;
+    font-size: 14px;
+    color: #5f6368;
+    border-top: 1px solid #e0e0e0;
+    background: #fff;
+  }
+</style>
 </body>
 </html>
