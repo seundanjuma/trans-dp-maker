@@ -1,48 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trans DP-Maker</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Trans DP-Maker</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-  <!-- Logo -->
-  <img id="logo" src="logo.png" alt="Trans DP-Maker logo" onerror="this.style.display='none'">
+  <body>
+    <!-- logo -->
+    <img
+      id="logo"
+      src="logo.png"
+      alt="Trans DP-Maker logo"
+      onerror="this.style.display='none'"
+    />
 
-  <!-- Upload Area -->
-  <div id="uploadArea">
-    <div id="uploadBox" tabindex="0" role="button">Drag here to upload</div>
-    <button id="uploadBtn" class="btn primary">Upload</button>
-    <input id="upload" type="file" accept="image/png,image/jpeg">
-  </div>
+    <!-- Upload area -->
+    <div id="uploadArea">
+      <div id="uploadBox" tabindex="0" role="button">Drag here to upload</div>
+      <button id="uploadBtn" class="btn">Upload</button>
+      <input id="upload" type="file" accept="image/png,image/jpeg" />
+    </div>
 
-  <!-- Spinner -->
-  <div id="spinner" aria-hidden="true"></div>
+    <!-- spinner -->
+    <div id="spinner" aria-hidden="true"></div>
 
-  <!-- Canvas preview -->
-  <div class="canvas-wrapper" id="canvasWrapper">
-    <canvas id="canvas" aria-label="Preview"></canvas>
-    <div id="dragHint"><span>Drag image to move</span></div>
-  </div>
+    <!-- canvas + drag hint -->
+    <div class="canvas-wrapper" id="canvasWrapper">
+      <canvas id="canvas" aria-label="Preview"></canvas>
+      <div id="dragHint"><span>Drag image to move</span></div>
+    </div>
 
-  <!-- Controls -->
-  <div id="controls">
-    <label for="zoom">Zoom</label>
-    <input id="zoom" type="range" min="1" max="3" step="0.01" value="1">
-    <button id="downloadBtn" class="btn primary" disabled>Download</button>
-    <button id="resetBtn" class="btn">Reupload</button>
-  </div>
+    <!-- controls -->
+    <div id="controls">
+      <label for="zoom">Zoom</label>
+      <input id="zoom" type="range" min="1" max="6" step="0.01" value="1" />
+      <button id="downloadBtn" class="btn primary" disabled>Download</button>
+      <button id="resetBtn" class="btn">Reupload</button>
+    </div>
 
-  <!-- Error Toast -->
-  <div id="error" role="status" aria-live="polite"></div>
+    <!-- error toast -->
+    <div id="error" role="status" aria-live="polite"></div>
 
-  <!-- Footer -->
-  <footer id="footer">
-    <p>© mrkazuda 2025</p>
-  </footer>
+    <!-- sticky footer -->
+    <footer id="footer">
+      <p>© mrkazuda 2025</p>
+    </footer>
 
-  <script src="script.js"></script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>

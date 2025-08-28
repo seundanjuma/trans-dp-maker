@@ -1,6 +1,6 @@
 /* ---------- Config / elements ---------- */
-const PREVIEW_SIZE = 1080;
-const EXPORT_SIZE = 1280;
+const PREVIEW_SIZE = 1080; // internal preview resolution
+const EXPORT_SIZE = 1280; // export resolution
 
 const uploadBox = document.getElementById("uploadBox");
 const uploadBtn = document.getElementById("uploadBtn");
@@ -23,11 +23,11 @@ const errorToast = document.getElementById("error");
 canvas.width = PREVIEW_SIZE;
 canvas.height = PREVIEW_SIZE;
 
-/* ---------- Frame ---------- */
+/* frame overlay */
 const frame = new Image();
 frame.src = "frame.png";
 
-/* ---------- State ---------- */
+/* state */
 let userImg = new Image();
 let userLoaded = false;
 let scale = 1;
@@ -36,59 +36,68 @@ let isDragging = false;
 let startX = 0, startY = 0;
 let lastPinchDist = null;
 
-/* ---------- Utility ---------- */
+/* utility: show error toast */
 function showError(msg) {
   errorToast.textContent = msg;
   errorToast.style.display = "block";
   setTimeout(() => errorToast.style.display = "none", 3000);
 }
 
-/* ---------- Constraints ---------- */
+/* ---------- Core math: constraints & draw ---------- */
 function clampTransform() {
   if (!userImg || !userImg.width) return;
 
   const minScalePreview = Math.max(PREVIEW_SIZE / userImg.width, PREVIEW_SIZE / userImg.height);
   if (scale < minScalePreview) scale = minScalePreview;
 
-  const iw = userImg.width * scale;
-  const ih = userImg.height * scale;
+  const iw_preview = userImg.width * scale;
+  const ih_preview = userImg.height * scale;
 
-  const minX = Math.min(0, PREVIEW_SIZE - iw);
-  const maxX = Math.max(0, PREVIEW_SIZE - iw); // ensure image can't go beyond canvas
-  const minY = Math.min(0, PREVIEW_SIZE - ih);
-  const maxY = Math.max(0, PREVIEW_SIZE - ih);
+  // Clamp offsets so image always covers canvas
+  const minX = Math.min(0, PREVIEW_SIZE - iw_preview);
+  const maxX = Math.max(0, PREVIEW_SIZE - iw_preview);
+  const minY = Math.min(0, PREVIEW_SIZE - ih_preview);
+  const maxY = Math.max(0, PREVIEW_SIZE - ih_preview);
 
-  if (offsetX > 0) offsetX = 0;
-  if (offsetX < PREVIEW_SIZE - iw) offsetX = PREVIEW_SIZE - iw;
-  if (offsetY > 0) offsetY = 0;
-  if (offsetY < PREVIEW_SIZE - ih) offsetY = PREVIEW_SIZE - ih;
+  if (iw_preview > PREVIEW_SIZE) {
+    if (offsetX > 0) offsetX = 0;
+    if (offsetX < PREVIEW_SIZE - iw_preview) offsetX = PREVIEW_SIZE - iw_preview;
+  } else {
+    offsetX = (PREVIEW_SIZE - iw_preview)/2;
+  }
+
+  if (ih_preview > PREVIEW_SIZE) {
+    if (offsetY > 0) offsetY = 0;
+    if (offsetY < PREVIEW_SIZE - ih_preview) offsetY = PREVIEW_SIZE - ih_preview;
+  } else {
+    offsetY = (PREVIEW_SIZE - ih_preview)/2;
+  }
 }
 
-/* ---------- Draw ---------- */
 function draw(targetCanvas = canvas, targetCtx = ctx, size = PREVIEW_SIZE) {
   if (!userLoaded || !frame.complete) return;
 
   clampTransform();
-
   const sf = size / PREVIEW_SIZE;
+
   const iw_out = userImg.width * scale * sf;
   const ih_out = userImg.height * scale * sf;
-  const x = offsetX * sf;
-  const y = offsetY * sf;
+  const offsetX_out = offsetX * sf;
+  const offsetY_out = offsetY * sf;
 
   targetCanvas.width = size;
   targetCanvas.height = size;
   targetCtx.clearRect(0, 0, size, size);
-  targetCtx.drawImage(userImg, x, y, iw_out, ih_out);
+  targetCtx.drawImage(userImg, offsetX_out, offsetY_out, iw_out, ih_out);
   targetCtx.drawImage(frame, 0, 0, size, size);
 }
 
-/* ---------- File Handling ---------- */
+/* ---------- File handling & UI ---------- */
 function handleFile(file) {
   if (!file) return;
-  const valid = ["image/png","image/jpeg"];
+  const valid = ["image/png", "image/jpeg"];
   if (!valid.includes(file.type)) {
-    showError("File type not supported. Upload .png or .jpg");
+    showError("File type not supported. Please upload .png, .jpg or .jpeg.");
     return;
   }
 
@@ -103,43 +112,37 @@ function handleFile(file) {
       controls.style.display = "flex";
       userLoaded = true;
 
-      // Auto-fit to cover preview
-      const sx = PREVIEW_SIZE / userImg.width;
-      const sy = PREVIEW_SIZE / userImg.height;
-      scale = Math.max(sx, sy);
-      offsetX = 0;
-      offsetY = 0;
+      // initial auto-fit scale
+      scale = Math.max(PREVIEW_SIZE / userImg.width, PREVIEW_SIZE / userImg.height);
+      offsetX = (PREVIEW_SIZE - userImg.width*scale)/2;
+      offsetY = (PREVIEW_SIZE - userImg.height*scale)/2;
 
       zoomEl.value = scale.toFixed(2);
       downloadBtn.disabled = false;
 
       draw();
       dragHint.classList.add("show");
-      setTimeout(()=> dragHint.classList.remove("show"), 2200);
+      setTimeout(() => dragHint.classList.remove("show"), 2200);
     };
     userImg.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-/* ---------- Event Listeners ---------- */
+/* Open file picker */
 function openPicker() { fileInput.click(); }
 uploadBox.addEventListener("click", openPicker);
-uploadBox.addEventListener("keydown", e => {
-  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPicker(); }
-});
 uploadBtn.addEventListener("click", openPicker);
-fileInput.addEventListener("change", e => handleFile(e.target.files[0]));
+fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
 
-/* Drag anywhere to upload */
-window.addEventListener("dragover", e => { e.preventDefault(); });
+/* Drag anywhere on window */
+window.addEventListener("dragover", e => e.preventDefault());
 window.addEventListener("drop", e => {
   e.preventDefault();
-  const f = e.dataTransfer.files[0];
-  if (f) handleFile(f);
+  if (e.dataTransfer && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 });
 
-/* ---------- Controls ---------- */
+/* Controls: zoom, download, reset */
 zoomEl.addEventListener("input", () => {
   scale = parseFloat(zoomEl.value);
   clampTransform();
@@ -167,25 +170,25 @@ resetBtn.addEventListener("click", () => {
   downloadBtn.disabled = true;
 });
 
-/* ---------- Canvas Drag ---------- */
+/* ---------- Canvas drag (mouse) ---------- */
 canvas.addEventListener("mousedown", e => {
   if (!userLoaded) return;
   isDragging = true;
-  const sf = PREVIEW_SIZE / canvas.clientWidth;
-  startX = e.offsetX * sf;
-  startY = e.offsetY * sf;
+  startX = e.offsetX * (PREVIEW_SIZE / canvas.clientWidth);
+  startY = e.offsetY * (PREVIEW_SIZE / canvas.clientHeight);
   canvas.style.cursor = "grabbing";
   dragHint.classList.remove("show");
 });
 
-window.addEventListener("mouseup", () => { isDragging = false; canvas.style.cursor = "grab"; });
-canvas.addEventListener("mouseleave", () => { isDragging = false; canvas.style.cursor = "grab"; });
+window.addEventListener("mouseup", () => { isDragging = false; canvas.style.cursor="grab"; });
+canvas.addEventListener("mouseleave", () => { isDragging=false; canvas.style.cursor="grab"; });
 
 canvas.addEventListener("mousemove", e => {
   if (!isDragging) return;
-  const sf = PREVIEW_SIZE / canvas.clientWidth;
-  const curX = e.offsetX * sf;
-  const curY = e.offsetY * sf;
+  const sx = PREVIEW_SIZE / canvas.clientWidth;
+  const sy = PREVIEW_SIZE / canvas.clientHeight;
+  const curX = e.offsetX * sx;
+  const curY = e.offsetY * sy;
   offsetX += curX - startX;
   offsetY += curY - startY;
   startX = curX;
@@ -194,7 +197,7 @@ canvas.addEventListener("mousemove", e => {
   draw();
 });
 
-/* ---------- Touch ---------- */
+/* ---------- Touch: drag + pinch ---------- */
 canvas.addEventListener("touchstart", e => {
   if (!userLoaded) return;
   if (e.touches.length === 1) {
@@ -208,7 +211,7 @@ canvas.addEventListener("touchstart", e => {
       e.touches[1].clientY - e.touches[0].clientY
     );
   }
-}, {passive: false});
+}, {passive:false});
 
 canvas.addEventListener("touchmove", e => {
   if (!userLoaded) return;
@@ -230,8 +233,11 @@ canvas.addEventListener("touchmove", e => {
     if (lastPinchDist) {
       const delta = dist / lastPinchDist;
       scale *= delta;
-      clampTransform();
+      const minScalePreview = Math.max(PREVIEW_SIZE/userImg.width, PREVIEW_SIZE/userImg.height);
+      if (scale < minScalePreview) scale = minScalePreview;
+      if (scale > 6) scale = 6;
       zoomEl.value = scale.toFixed(2);
+      clampTransform();
       draw();
     }
     lastPinchDist = dist;
@@ -245,7 +251,7 @@ canvas.addEventListener("touchend", e => {
 
 /* ---------- Init ---------- */
 (function init() {
-  canvasWrapper.style.display = "none";
-  controls.style.display = "none";
+  canvasWrapper.style.display="none";
+  controls.style.display="none";
   downloadBtn.disabled = true;
 })();

@@ -3,16 +3,14 @@
   --text: #202124;
   --muted: #5f6368;
   --border: #dadce0;
-  --accent: #4285f4;
-  --btn-bg: #f1f3f4;
-  --btn-hover: #e0e0e0;
-  --radius-pill: 24px;
+  --accent: #1a73e8;
+  --btn-bg: #e8f0fe;
+  --btn-hover: #d2e3fc;
   --radius-md: 10px;
-  --shadow: 0 2px 6px rgba(0,0,0,0.12);
-  --header-weight: 500;
-  --text-weight: 400;
+  --shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Reset & body */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -21,23 +19,28 @@
 
 html, body {
   height: 100%;
+  display: flex;
+  flex-direction: column;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
   background: var(--bg);
   color: var(--text);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
   text-align: center;
 }
 
+body {
+  min-height: 100vh;
+}
+
+/* logo */
 #logo {
   width: 160px;
   height: auto;
-  margin-bottom: 8px;
+  display: block;
+  margin: 16px auto 8px;
+  font-weight: 600;
 }
 
+/* Upload area */
 #uploadArea {
   display: flex;
   flex-direction: column;
@@ -45,40 +48,53 @@ html, body {
   gap: 12px;
 }
 
+/* Upload Box */
 #uploadBox {
   width: 320px;
   max-width: 92vw;
-  padding: 16px;
+  height: 40px; /* 2/3 height */
+  line-height: 40px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #888;
   border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   background: #fff;
   box-shadow: var(--shadow);
   cursor: pointer;
-  font-weight: var(--header-weight);
+  text-align: center;
 }
 
-#uploadBox:active {
-  transform: translateY(1px);
+/* Buttons */
+.btn {
+  padding: 6px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-#uploadBtn {
-  padding: 10px 22px;
-  border-radius: 20px;
-  border: none;
+.btn:hover {
+  background: var(--btn-hover);
+}
+
+.btn.primary {
   background: var(--accent);
   color: #fff;
-  cursor: pointer;
-  font-weight: var(--header-weight);
+  border-color: transparent;
 }
 
-#uploadBtn:hover {
-  background: #3367d6;
+.btn:disabled {
+  background: #eee;
+  color: #9aa0a6;
+  cursor: not-allowed;
 }
 
-#upload {
-  display: none;
-}
-
+/* spinner */
 #spinner {
   display: none;
   width: 28px;
@@ -87,17 +103,20 @@ html, body {
   border: 3px solid #e8eaed;
   border-top: 3px solid var(--accent);
   animation: spin 1s linear infinite;
-  margin-top: 12px;
+  margin: 12px auto;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
+/* canvas */
 .canvas-wrapper {
   position: relative;
   display: none;
-  margin-top: 6px;
+  margin-top: 12px;
 }
 
 canvas {
@@ -114,11 +133,11 @@ canvas {
 @media (max-width: 900px) {
   canvas { width: 360px; height: 360px; }
 }
-
 @media (max-width: 600px) {
   canvas { width: 300px; height: 300px; }
 }
 
+/* drag hint */
 #dragHint {
   position: absolute;
   inset: 0;
@@ -144,6 +163,7 @@ canvas {
   transform: translateY(0);
 }
 
+/* controls */
 #controls {
   display: none;
   margin-top: 10px;
@@ -157,30 +177,12 @@ input[type="range"] {
 }
 
 @media (max-width: 600px) {
-  input[type="range"] { width: 200px; }
+  input[type="range"] {
+    width: 200px;
+  }
 }
 
-.btn {
-  padding: 10px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: var(--btn-bg);
-  cursor: pointer;
-  font-weight: var(--header-weight);
-}
-
-.btn.primary {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-}
-
-.btn:disabled {
-  background: #eee;
-  cursor: not-allowed;
-  color: #9aa0a6;
-}
-
+/* error toast */
 #error {
   display: none;
   position: fixed;
@@ -195,11 +197,14 @@ input[type="range"] {
   box-shadow: var(--shadow);
 }
 
+/* sticky footer */
 #footer {
-  padding: 15px 0;
+  margin-top: auto;
+  padding: 10px 0;
+  font-size: 12px;
   text-align: center;
-  font-size: 14px;
-  color: var(--muted);
+  color: #5f6368;
   border-top: 1px solid #e0e0e0;
   background: #fff;
+  font-weight: 400;
 }
