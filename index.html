@@ -322,6 +322,56 @@ input[type="range"]::-moz-range-thumb {
   z-index: 10;
 }
 
+/* success state */
+#successState {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 4px 4px;
+  animation: fadeUp 320ms ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.success-check {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  animation: popIn 380ms cubic-bezier(.34,1.56,.64,1) both;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+#successState h2 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+  font-size: 24px;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+#successState p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 320px;
+  margin-bottom: 22px;
+}
+
+#successState .btn { width: 100%; }
+
 /* footer */
 #footer {
   margin-top: 32px;
@@ -376,6 +426,18 @@ input[type="range"]::-moz-range-thumb {
         <button id="downloadBtn" class="btn primary" disabled>Download</button>
       </div>
     </div>
+
+    <!-- success state -->
+    <div id="successState">
+      <div class="success-check">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M4 12.5L9.5 18L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>Saved to your gallery</h2>
+      <p>Set it as your profile picture on WhatsApp, Facebook, and everywhere else. Share it with your friends and colleagues — let them know you'll be at TRANS 2026, and they shouldn't miss it.</p>
+      <button id="makeAnotherBtn" class="btn primary">Make Another</button>
+    </div>
   </div>
 
   <footer id="footer">
@@ -407,6 +469,8 @@ const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn = document.getElementById("resetBtn");
 
 const errorToast = document.getElementById("error");
+const successState = document.getElementById("successState");
+const makeAnotherBtn = document.getElementById("makeAnotherBtn");
 
 canvas.width = PREVIEW_SIZE;
 canvas.height = PREVIEW_SIZE;
@@ -541,10 +605,26 @@ downloadBtn.addEventListener("click", () => {
   a.download = "dp-trans.png";
   a.href = out.toDataURL("image/png");
   a.click();
+
+  canvasWrapper.style.display = "none";
+  controls.style.display = "none";
+  successState.style.display = "flex";
+});
+
+makeAnotherBtn.addEventListener("click", () => {
+  successState.style.display = "none";
+  userLoaded = false;
+  uploadArea.style.display = "flex";
+  canvasWrapper.style.display = "none";
+  controls.style.display = "none";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  fileInput.value = "";
+  downloadBtn.disabled = true;
 });
 
 resetBtn.addEventListener("click", () => {
   userLoaded = false;
+  successState.style.display = "none";
   uploadArea.style.display = "flex";
   canvasWrapper.style.display = "none";
   controls.style.display = "none";
@@ -635,6 +715,7 @@ canvas.addEventListener("touchend", e => {
 (function init() {
   canvasWrapper.style.display = "none";
   controls.style.display = "none";
+  successState.style.display = "none";
   downloadBtn.disabled = true;
 })();
 </script>
