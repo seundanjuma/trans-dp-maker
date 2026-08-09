@@ -1,725 +1,96 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Trans DP Maker</title>
-<link rel="icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" href="favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital,wght@0,400&family=Lato:wght@400;500;700;900&display=swap" rel="stylesheet">
-<style>
-:root {
-  --blue: #5BCEFA;
-  --pink: #F5A9B8;
-  --ink: #14151A;
-  --muted: #6b6d76;
-  --faint: #9a9ca6;
-  --card: #ffffff;
-  --line: rgba(20,21,26,0.09);
-  --radius-lg: 28px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-  min-height: 100%;
-}
-
-body {
-  font-family: 'Lato', system-ui, sans-serif;
-  color: var(--ink);
-  background:
-    radial-gradient(1100px 640px at 12% -8%, rgba(91,206,250,0.35), transparent 60%),
-    radial-gradient(1000px 620px at 88% 6%, rgba(245,169,184,0.38), transparent 58%),
-    #fbfbfc;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 56px 20px 28px;
-}
-
-.hero {
-  text-align: center;
-  max-width: 480px;
-  margin-bottom: 34px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 18px;
-}
-
-.eyebrow .dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--blue), var(--pink));
-  display: inline-block;
-}
-
-h1 {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-weight: 400;
-  font-size: clamp(38px, 9vw, 54px);
-  line-height: 1.04;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-}
-
-.hero p {
-  margin-top: 16px;
-  font-size: 16px;
-  line-height: 1.55;
-  color: var(--muted);
-  font-weight: 400;
-}
-
-/* Card */
-.card {
-  width: 100%;
-  max-width: 440px;
-  background: var(--card);
-  border-radius: var(--radius-lg);
-  padding: 30px;
-  box-shadow:
-    0 1px 2px rgba(20,21,26,0.04),
-    0 24px 60px -20px rgba(20,21,26,0.22);
-  border: 1px solid rgba(20,21,26,0.05);
-}
-
-/* Upload area */
-#uploadArea {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 14px;
-}
-
-#uploadBox {
-  border: 1.5px dashed rgba(91,206,250,0.55);
-  border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(91,206,250,0.06), rgba(245,169,184,0.08));
-  padding: 40px 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color .18s ease, transform .18s ease, background .18s ease;
-}
-
-#uploadBox:hover, #uploadBox:focus-visible {
-  border-color: var(--pink);
-  transform: translateY(-1px);
-  outline: none;
-}
-
-#uploadBox .glyph {
-  font-size: 26px;
-  margin-bottom: 10px;
-  display: block;
-}
-
-#uploadBox .label {
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--ink);
-}
-
-#uploadBox .sub {
-  font-size: 12.5px;
-  color: var(--faint);
-  margin-top: 4px;
-  font-weight: 400;
-}
-
-input[type="file"] { display: none; }
-
-/* Buttons */
-.btn {
-  appearance: none;
-  border: none;
-  border-radius: 999px;
-  padding: 17px 34px;
-  font-family: 'Lato', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  transition: transform .12s ease, opacity .12s ease, background .12s ease;
-}
-
-.btn:active { transform: scale(0.97); }
-
-.btn.primary {
-  background: var(--ink);
-  color: #fff;
-}
-.btn.primary:hover { opacity: 0.88; }
-.btn.primary:disabled {
-  background: #e2e3e7;
-  color: #a7a9b2;
-  cursor: not-allowed;
-}
-.btn.primary:disabled:active { transform: none; }
-
-.btn.ghost {
-  background: transparent;
-  color: var(--muted);
-  border: 1.5px solid var(--line);
-}
-.btn.ghost:hover { border-color: var(--ink); color: var(--ink); }
-
-/* spinner */
-#spinner {
-  display: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 3px solid rgba(20,21,26,0.08);
-  border-top: 3px solid var(--pink);
-  animation: spin 0.85s linear infinite;
-  margin: 18px auto;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* canvas */
-.canvas-wrapper {
-  position: relative;
-  display: none;
-  margin: 0 auto 20px;
-  width: fit-content;
-}
-
-canvas {
-  display: block;
-  width: 320px;
-  height: 320px;
-  border-radius: 20px;
-  background: #fff;
-  box-shadow: 0 10px 30px -10px rgba(20,21,26,0.25);
-  border: 1px solid var(--line);
-  touch-action: none;
-  cursor: grab;
-}
-
-canvas:active { cursor: grabbing; }
-
-@media (max-width: 420px) {
-  canvas { width: 260px; height: 260px; }
-}
-
-#dragHint {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-#dragHint span {
-  background: rgba(20,21,26,0.78);
-  color: #fff;
-  padding: 9px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: all 220ms ease;
-}
-
-#dragHint.show span {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* controls */
-#controls {
-  display: none;
-  flex-direction: column;
-  gap: 16px;
-  align-items: stretch;
-}
-
-.zoom-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.zoom-row label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-input[type="range"] {
-  flex: 1;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 4px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--blue), var(--pink));
-  outline: none;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  border: 3px solid var(--ink);
-  cursor: pointer;
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  border: 3px solid var(--ink);
-  cursor: pointer;
-}
-
-.action-row {
-  display: flex;
-  gap: 10px;
-}
-
-.action-row .btn { flex: 1; }
-
-/* error toast */
-#error {
-  display: none;
-  position: fixed;
-  bottom: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1c1416;
-  color: #ffd7db;
-  padding: 11px 18px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-  z-index: 10;
-}
-
-/* success state */
-#successState {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 8px 4px 4px;
-  animation: fadeUp 320ms ease both;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.success-check {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--blue), var(--pink));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-  animation: popIn 380ms cubic-bezier(.34,1.56,.64,1) both;
-}
-
-@keyframes popIn {
-  from { transform: scale(0.4); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-#successState h2 {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-weight: 400;
-  font-size: 24px;
-  color: var(--ink);
-  margin-bottom: 10px;
-}
-
-#successState p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--muted);
-  max-width: 320px;
-  margin-bottom: 22px;
-}
-
-#successState .btn { width: 100%; }
-
-/* footer */
-#footer {
-  margin-top: 32px;
-  font-size: 12px;
-  color: var(--faint);
-  text-align: center;
-  font-weight: 400;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
-}
-</style>
-</head>
-<body>
-
-  <div class="hero">
-    <div class="eyebrow"><span class="dot"></span>TRANS 2026 ·  Equipping the Saints for Kingdom Expansion</div>
-    <h1>Show your friends<br>you're coming.</h1>
-    <p>Upload your photo, add the official frame, and share it to let others know you'll be at TRANS 2026.</p>
-  </div>
-
-  <div class="card">
-    <!-- Upload area -->
-    <div id="uploadArea">
-      <div id="uploadBox" tabindex="0" role="button">
-        <span class="glyph">✦</span>
-        <div class="label">Tap to upload your picture</div>
-        <div class="sub">PNG or JPG</div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Trans DP Maker</title>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital,wght@0,400&family=Lato:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="hero">
+      <div class="eyebrow">
+        <span class="dot"></span>TRANS 2026 · Towards Revival Among The Nations
       </div>
-      <button id="uploadBtn" class="btn primary">Choose Photo</button>
-      <input id="upload" type="file" accept="image/png,image/jpeg" />
+      <h1>Show your friends<br />you're coming.</h1>
+      <p>
+        Upload your photo, add the official frame, and share it to let others
+        know you'll be at TRANS 2026.
+      </p>
     </div>
 
-    <!-- spinner -->
-    <div id="spinner" aria-hidden="true"></div>
-
-    <!-- canvas + drag hint -->
-    <div class="canvas-wrapper" id="canvasWrapper">
-      <canvas id="canvas" aria-label="Preview"></canvas>
-      <div id="dragHint"><span>Drag to move</span></div>
-    </div>
-
-    <!-- controls -->
-    <div id="controls">
-      <div class="zoom-row">
-        <label for="zoom">Zoom</label>
-        <input id="zoom" type="range" min="1" max="6" step="0.01" value="1" />
+    <div class="card">
+      <!-- Upload area -->
+      <div id="uploadArea">
+        <div id="uploadBox" tabindex="0" role="button">
+          <span class="glyph">✦</span>
+          <div class="label">Tap to upload your picture</div>
+          <div class="sub">PNG or JPG</div>
+        </div>
+        <button id="uploadBtn" class="btn primary">Choose Photo</button>
+        <input id="upload" type="file" accept="image/png,image/jpeg" />
       </div>
-      <div class="action-row">
-        <button id="resetBtn" class="btn ghost">Change Photo</button>
-        <button id="downloadBtn" class="btn primary" disabled>Download</button>
+
+      <!-- spinner -->
+      <div id="spinner" aria-hidden="true"></div>
+
+      <!-- canvas + drag hint -->
+      <div class="canvas-wrapper" id="canvasWrapper">
+        <canvas id="canvas" aria-label="Preview"></canvas>
+        <div id="dragHint"><span>Drag to move</span></div>
+      </div>
+
+      <!-- controls -->
+      <div id="controls">
+        <div class="zoom-row">
+          <label for="zoom">Zoom</label>
+          <input id="zoom" type="range" min="1" max="6" step="0.01" value="1" />
+        </div>
+        <div class="action-row">
+          <button id="resetBtn" class="btn ghost">Change Photo</button>
+          <button id="downloadBtn" class="btn primary" disabled>
+            Download
+          </button>
+        </div>
+      </div>
+
+      <!-- success state -->
+      <div id="successState">
+        <div class="success-check">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M4 12.5L9.5 18L20 6"
+              stroke="white"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <h2>Saved to your gallery</h2>
+        <p>
+          Set it as your profile picture on WhatsApp, Facebook, and everywhere
+          else. Share it with your friends and colleagues — let them know you'll
+          be at TRANS 2026, and they shouldn't miss it.
+        </p>
+        <button id="makeAnotherBtn" class="btn primary">Make Another</button>
       </div>
     </div>
 
-    <!-- success state -->
-    <div id="successState">
-      <div class="success-check">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <path d="M4 12.5L9.5 18L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <h2>Saved to your gallery</h2>
-      <p>Set it as your profile picture on WhatsApp, Facebook, and everywhere else. Share it with your friends and colleagues — let them know you'll be at TRANS 2026, and they shouldn't miss it.</p>
-      <button id="makeAnotherBtn" class="btn primary">Make Another</button>
-    </div>
-  </div>
+    <footer id="footer">
+      <p>© mrkazuda 2026</p>
+    </footer>
 
-  <footer id="footer">
-    <p>© mrkazuda 2026</p>
-  </footer>
+    <!-- error toast -->
+    <div id="error" role="status" aria-live="polite"></div>
 
-  <!-- error toast -->
-  <div id="error" role="status" aria-live="polite"></div>
-
-<script>
-/* ---------- Config / elements ---------- */
-const PREVIEW_SIZE = 1080; // internal preview resolution
-const EXPORT_SIZE = 1280; // export resolution
-
-const uploadBox = document.getElementById("uploadBox");
-const uploadBtn = document.getElementById("uploadBtn");
-const fileInput = document.getElementById("upload");
-const uploadArea = document.getElementById("uploadArea");
-const spinner = document.getElementById("spinner");
-
-const canvasWrapper = document.getElementById("canvasWrapper");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-const dragHint = document.getElementById("dragHint");
-const controls = document.getElementById("controls");
-const zoomEl = document.getElementById("zoom");
-const downloadBtn = document.getElementById("downloadBtn");
-const resetBtn = document.getElementById("resetBtn");
-
-const errorToast = document.getElementById("error");
-const successState = document.getElementById("successState");
-const makeAnotherBtn = document.getElementById("makeAnotherBtn");
-
-canvas.width = PREVIEW_SIZE;
-canvas.height = PREVIEW_SIZE;
-
-/* frame overlay */
-const frame = new Image();
-frame.src = "frame.png";
-
-/* state */
-let userImg = new Image();
-let userLoaded = false;
-let scale = 1;
-let offsetX = 0, offsetY = 0;
-let isDragging = false;
-let startX = 0, startY = 0;
-let lastPinchDist = null;
-
-/* utility: show error toast */
-function showError(msg) {
-  errorToast.textContent = msg;
-  errorToast.style.display = "block";
-  setTimeout(() => errorToast.style.display = "none", 3000);
-}
-
-/* ---------- Core math: constraints & draw ---------- */
-function clampTransform() {
-  if (!userImg || !userImg.width) return;
-
-  const minScalePreview = Math.max(PREVIEW_SIZE / userImg.width, PREVIEW_SIZE / userImg.height);
-  if (scale < minScalePreview) scale = minScalePreview;
-
-  const iw_preview = userImg.width * scale;
-  const ih_preview = userImg.height * scale;
-
-  if (iw_preview > PREVIEW_SIZE) {
-    if (offsetX > 0) offsetX = 0;
-    if (offsetX < PREVIEW_SIZE - iw_preview) offsetX = PREVIEW_SIZE - iw_preview;
-  } else {
-    offsetX = (PREVIEW_SIZE - iw_preview) / 2;
-  }
-
-  if (ih_preview > PREVIEW_SIZE) {
-    if (offsetY > 0) offsetY = 0;
-    if (offsetY < PREVIEW_SIZE - ih_preview) offsetY = PREVIEW_SIZE - ih_preview;
-  } else {
-    offsetY = (PREVIEW_SIZE - ih_preview) / 2;
-  }
-}
-
-function draw(targetCanvas = canvas, targetCtx = ctx, size = PREVIEW_SIZE) {
-  if (!userLoaded) return;
-
-  clampTransform();
-  const sf = size / PREVIEW_SIZE;
-
-  const iw_out = userImg.width * scale * sf;
-  const ih_out = userImg.height * scale * sf;
-  const offsetX_out = offsetX * sf;
-  const offsetY_out = offsetY * sf;
-
-  targetCanvas.width = size;
-  targetCanvas.height = size;
-  targetCtx.clearRect(0, 0, size, size);
-  targetCtx.drawImage(userImg, offsetX_out, offsetY_out, iw_out, ih_out);
-  if (frame.complete && frame.naturalWidth > 0) {
-    targetCtx.drawImage(frame, 0, 0, size, size);
-  }
-}
-
-/* ---------- File handling & UI ---------- */
-function handleFile(file) {
-  if (!file) return;
-  const valid = ["image/png", "image/jpeg"];
-  if (!valid.includes(file.type)) {
-    showError("File type not supported. Please upload .png, .jpg or .jpeg.");
-    return;
-  }
-
-  spinner.style.display = "block";
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    userImg = new Image();
-    userImg.onload = () => {
-      spinner.style.display = "none";
-      uploadArea.style.display = "none";
-      canvasWrapper.style.display = "block";
-      controls.style.display = "flex";
-      userLoaded = true;
-
-      scale = Math.max(PREVIEW_SIZE / userImg.width, PREVIEW_SIZE / userImg.height);
-      offsetX = (PREVIEW_SIZE - userImg.width * scale) / 2;
-      offsetY = (PREVIEW_SIZE - userImg.height * scale) / 2;
-
-      zoomEl.value = scale.toFixed(2);
-      downloadBtn.disabled = false;
-
-      draw();
-      dragHint.classList.add("show");
-      setTimeout(() => dragHint.classList.remove("show"), 2200);
-    };
-    userImg.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function openPicker() { fileInput.click(); }
-uploadBox.addEventListener("click", openPicker);
-uploadBox.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPicker(); }
-});
-uploadBtn.addEventListener("click", openPicker);
-fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
-
-window.addEventListener("dragover", e => e.preventDefault());
-window.addEventListener("drop", e => {
-  e.preventDefault();
-  if (e.dataTransfer && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-});
-
-zoomEl.addEventListener("input", () => {
-  scale = parseFloat(zoomEl.value);
-  clampTransform();
-  draw();
-});
-
-downloadBtn.addEventListener("click", () => {
-  if (!userLoaded) return;
-  const out = document.createElement("canvas");
-  const octx = out.getContext("2d");
-  draw(out, octx, EXPORT_SIZE);
-  const a = document.createElement("a");
-  a.download = "dp-trans.png";
-  a.href = out.toDataURL("image/png");
-  a.click();
-
-  canvasWrapper.style.display = "none";
-  controls.style.display = "none";
-  successState.style.display = "flex";
-});
-
-makeAnotherBtn.addEventListener("click", () => {
-  successState.style.display = "none";
-  userLoaded = false;
-  uploadArea.style.display = "flex";
-  canvasWrapper.style.display = "none";
-  controls.style.display = "none";
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  fileInput.value = "";
-  downloadBtn.disabled = true;
-});
-
-resetBtn.addEventListener("click", () => {
-  userLoaded = false;
-  successState.style.display = "none";
-  uploadArea.style.display = "flex";
-  canvasWrapper.style.display = "none";
-  controls.style.display = "none";
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  fileInput.value = "";
-  downloadBtn.disabled = true;
-});
-
-/* ---------- Canvas drag (mouse) ---------- */
-canvas.addEventListener("mousedown", e => {
-  if (!userLoaded) return;
-  isDragging = true;
-  startX = e.offsetX * (PREVIEW_SIZE / canvas.clientWidth);
-  startY = e.offsetY * (PREVIEW_SIZE / canvas.clientHeight);
-  dragHint.classList.remove("show");
-});
-
-window.addEventListener("mouseup", () => { isDragging = false; });
-canvas.addEventListener("mouseleave", () => { isDragging = false; });
-
-canvas.addEventListener("mousemove", e => {
-  if (!isDragging) return;
-  const sx = PREVIEW_SIZE / canvas.clientWidth;
-  const sy = PREVIEW_SIZE / canvas.clientHeight;
-  const curX = e.offsetX * sx;
-  const curY = e.offsetY * sy;
-  offsetX += curX - startX;
-  offsetY += curY - startY;
-  startX = curX;
-  startY = curY;
-  clampTransform();
-  draw();
-});
-
-/* ---------- Touch: drag + pinch ---------- */
-canvas.addEventListener("touchstart", e => {
-  if (!userLoaded) return;
-  if (e.touches.length === 1) {
-    isDragging = true;
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    dragHint.classList.remove("show");
-  } else if (e.touches.length === 2) {
-    lastPinchDist = Math.hypot(
-      e.touches[1].clientX - e.touches[0].clientX,
-      e.touches[1].clientY - e.touches[0].clientY
-    );
-  }
-}, { passive: false });
-
-canvas.addEventListener("touchmove", e => {
-  if (!userLoaded) return;
-  e.preventDefault();
-  if (e.touches.length === 1 && isDragging) {
-    const dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
-    offsetX += dx * (PREVIEW_SIZE / canvas.clientWidth);
-    offsetY += dy * (PREVIEW_SIZE / canvas.clientHeight);
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    clampTransform();
-    draw();
-  } else if (e.touches.length === 2) {
-    const dist = Math.hypot(
-      e.touches[1].clientX - e.touches[0].clientX,
-      e.touches[1].clientY - e.touches[0].clientY
-    );
-    if (lastPinchDist) {
-      const delta = dist / lastPinchDist;
-      scale *= delta;
-      const minScalePreview = Math.max(PREVIEW_SIZE / userImg.width, PREVIEW_SIZE / userImg.height);
-      if (scale < minScalePreview) scale = minScalePreview;
-      if (scale > 6) scale = 6;
-      zoomEl.value = scale.toFixed(2);
-      clampTransform();
-      draw();
-    }
-    lastPinchDist = dist;
-  }
-}, { passive: false });
-
-canvas.addEventListener("touchend", e => {
-  if (e.touches.length < 2) lastPinchDist = null;
-  if (e.touches.length === 0) isDragging = false;
-});
-
-/* ---------- Init ---------- */
-(function init() {
-  canvasWrapper.style.display = "none";
-  controls.style.display = "none";
-  successState.style.display = "none";
-  downloadBtn.disabled = true;
-})();
-</script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>
