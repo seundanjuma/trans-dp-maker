@@ -28,6 +28,15 @@ canvas.height = PREVIEW_SIZE;
 /* frame overlay */
 const frame = new Image();
 const frameFiles = ["frame-1.png", "frame-2.png"];
+let frameLoaded = false;
+let frameFailed = false;
+
+frame.onload = () => {
+  frameLoaded = true;
+};
+frame.onerror = () => {
+  frameFailed = true;
+};
 frame.src = frameFiles[Math.floor(Math.random() * frameFiles.length)];
 
 /* state */
@@ -165,6 +174,19 @@ zoomEl.addEventListener("input", () => {
 
 downloadBtn.addEventListener("click", () => {
   if (!userLoaded) return;
+
+  if (frameFailed) {
+    showError(
+      "Couldn't load the frame. Check your connection and reload the page.",
+    );
+    return;
+  }
+
+  if (!frameLoaded) {
+    showError("Still loading the frame — please wait a moment and try again.");
+    return;
+  }
+
   const out = document.createElement("canvas");
   const octx = out.getContext("2d");
   draw(out, octx, EXPORT_SIZE);
