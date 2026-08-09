@@ -27,7 +27,7 @@ canvas.height = PREVIEW_SIZE;
 
 /* frame overlay */
 const frame = new Image();
-const frameFiles = ["frame-1.png", "frame-2.png", "frame-3.png"];
+const frameFiles = ["frame-1.png", "frame-2.png"];
 frame.src = frameFiles[Math.floor(Math.random() * frameFiles.length)];
 
 /* state */
