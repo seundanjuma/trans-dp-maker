@@ -2,6 +2,14 @@
 const PREVIEW_SIZE = 1080; // internal preview resolution
 const EXPORT_SIZE = 1280; // export resolution
 
+const FRAME_SIZE = 1280; // full frame image dimensions
+const PHOTO_SIZE = 1050; // size of the transparent cutout in the frame, centered
+const PHOTO_RATIO = PHOTO_SIZE / FRAME_SIZE;
+
+// The photo-positioning area in preview coordinates (centered inside the canvas)
+const PHOTO_AREA_PREVIEW = PREVIEW_SIZE * PHOTO_RATIO;
+const PHOTO_INSET_PREVIEW = (PREVIEW_SIZE - PHOTO_AREA_PREVIEW) / 2;
+
 const uploadBox = document.getElementById("uploadBox");
 const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("upload");
@@ -27,7 +35,6 @@ canvas.height = PREVIEW_SIZE;
 
 /* frame overlay */
 const frame = new Image();
-const frameFiles = ["frame-1.png", "frame-2.png"];
 let frameLoaded = false;
 let frameFailed = false;
 
@@ -37,7 +44,7 @@ frame.onload = () => {
 frame.onerror = () => {
   frameFailed = true;
 };
-frame.src = frameFiles[Math.floor(Math.random() * frameFiles.length)];
+frame.src = "frame-1.png";
 
 /* state */
 let userImg = new Image();
@@ -62,28 +69,31 @@ function clampTransform() {
   if (!userImg || !userImg.width) return;
 
   const minScalePreview = Math.max(
-    PREVIEW_SIZE / userImg.width,
-    PREVIEW_SIZE / userImg.height,
+    PHOTO_AREA_PREVIEW / userImg.width,
+    PHOTO_AREA_PREVIEW / userImg.height,
   );
   if (scale < minScalePreview) scale = minScalePreview;
 
   const iw_preview = userImg.width * scale;
   const ih_preview = userImg.height * scale;
 
-  if (iw_preview > PREVIEW_SIZE) {
-    if (offsetX > 0) offsetX = 0;
-    if (offsetX < PREVIEW_SIZE - iw_preview)
-      offsetX = PREVIEW_SIZE - iw_preview;
+  const minX = PHOTO_INSET_PREVIEW + PHOTO_AREA_PREVIEW - iw_preview;
+  const maxX = PHOTO_INSET_PREVIEW;
+  const minY = PHOTO_INSET_PREVIEW + PHOTO_AREA_PREVIEW - ih_preview;
+  const maxY = PHOTO_INSET_PREVIEW;
+
+  if (iw_preview > PHOTO_AREA_PREVIEW) {
+    if (offsetX > maxX) offsetX = maxX;
+    if (offsetX < minX) offsetX = minX;
   } else {
-    offsetX = (PREVIEW_SIZE - iw_preview) / 2;
+    offsetX = PHOTO_INSET_PREVIEW + (PHOTO_AREA_PREVIEW - iw_preview) / 2;
   }
 
-  if (ih_preview > PREVIEW_SIZE) {
-    if (offsetY > 0) offsetY = 0;
-    if (offsetY < PREVIEW_SIZE - ih_preview)
-      offsetY = PREVIEW_SIZE - ih_preview;
+  if (ih_preview > PHOTO_AREA_PREVIEW) {
+    if (offsetY > maxY) offsetY = maxY;
+    if (offsetY < minY) offsetY = minY;
   } else {
-    offsetY = (PREVIEW_SIZE - ih_preview) / 2;
+    offsetY = PHOTO_INSET_PREVIEW + (PHOTO_AREA_PREVIEW - ih_preview) / 2;
   }
 }
 
@@ -128,11 +138,13 @@ function handleFile(file) {
       userLoaded = true;
 
       scale = Math.max(
-        PREVIEW_SIZE / userImg.width,
-        PREVIEW_SIZE / userImg.height,
+        PHOTO_AREA_PREVIEW / userImg.width,
+        PHOTO_AREA_PREVIEW / userImg.height,
       );
-      offsetX = (PREVIEW_SIZE - userImg.width * scale) / 2;
-      offsetY = (PREVIEW_SIZE - userImg.height * scale) / 2;
+      offsetX =
+        PHOTO_INSET_PREVIEW + (PHOTO_AREA_PREVIEW - userImg.width * scale) / 2;
+      offsetY =
+        PHOTO_INSET_PREVIEW + (PHOTO_AREA_PREVIEW - userImg.height * scale) / 2;
 
       zoomEl.value = scale.toFixed(2);
       downloadBtn.disabled = false;
@@ -295,8 +307,8 @@ canvas.addEventListener(
         const delta = dist / lastPinchDist;
         scale *= delta;
         const minScalePreview = Math.max(
-          PREVIEW_SIZE / userImg.width,
-          PREVIEW_SIZE / userImg.height,
+          PHOTO_AREA_PREVIEW / userImg.width,
+          PHOTO_AREA_PREVIEW / userImg.height,
         );
         if (scale < minScalePreview) scale = minScalePreview;
         if (scale > 6) scale = 6;
