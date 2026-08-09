@@ -1,6 +1,6 @@
 # TRANS DP Maker
 
-A simple web app for creating a custom profile picture for TRANS 2026 (Towards Revival Among The Nations).
+A simple web app for creating a custom profile picture for TRANS 2026 (Towards Revival Among The Nations), a yearly program by my church after i had issues using custom cutouts on getDP.
 
 Upload a photo, position and zoom it, and download it with the official event frame — ready to share and show you're coming.
 
