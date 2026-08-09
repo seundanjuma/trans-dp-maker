@@ -177,13 +177,13 @@ downloadBtn.addEventListener("click", () => {
 
   if (frameFailed) {
     showError(
-      "Couldn't load the frame. Check your connection and reload the page.",
+      "Something didn't load properly. Please check your internet and try again.",
     );
     return;
   }
 
   if (!frameLoaded) {
-    showError("Still loading the frame — please wait a moment and try again.");
+    showError("Almost ready — please wait a few seconds and try again.");
     return;
   }
 
