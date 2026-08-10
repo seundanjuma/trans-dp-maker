@@ -2,13 +2,22 @@
 const PREVIEW_SIZE = 1080; // internal preview resolution
 const EXPORT_SIZE = 1280; // export resolution
 
-const FRAME_SIZE = 1280; // full frame image dimensions
+const FRAME_SIZE = 1280; // native resolution of background/frame/ribbon assets
 const PHOTO_SIZE = 1050; // size of the transparent cutout in the frame, centered
 const PHOTO_RATIO = PHOTO_SIZE / FRAME_SIZE;
 
-// The photo-positioning area in preview coordinates (centered inside the canvas)
 const PHOTO_AREA_PREVIEW = PREVIEW_SIZE * PHOTO_RATIO;
 const PHOTO_INSET_PREVIEW = (PREVIEW_SIZE - PHOTO_AREA_PREVIEW) / 2;
+
+const MAX_NAME_LENGTH = 13;
+
+// Ribbon text anchor points — measured against the native 1280px assets,
+// using the text baseline (matches Canvas's default textBaseline behavior).
+const RIBBON_TEXT = {
+  bottom: { x: 640, y: 1010, angleDeg: 11.452, color: "#d1d1d1" },
+  top: { x: 640, y: 972, angleDeg: 355.889, color: "#ffffff" },
+};
+const RIBBON_FONT_SIZE = 47.2; // in 1280-reference px — from Illustrator (47.2pt, assumed 72ppi doc)
 
 const uploadBox = document.getElementById("uploadBox");
 const uploadBtn = document.getElementById("uploadBtn");
@@ -30,21 +39,56 @@ const errorToast = document.getElementById("error");
 const successState = document.getElementById("successState");
 const makeAnotherBtn = document.getElementById("makeAnotherBtn");
 
+const nameInput = document.getElementById("nameInput");
+const charCount = document.getElementById("charCount");
+
 canvas.width = PREVIEW_SIZE;
 canvas.height = PREVIEW_SIZE;
 
-/* frame overlay */
-const frame = new Image();
-let frameLoaded = false;
-let frameFailed = false;
+/* ---------- Asset loading ---------- */
+function loadImg(src) {
+  const img = new Image();
+  img.src = src;
+  return img;
+}
 
-frame.onload = () => {
-  frameLoaded = true;
-};
-frame.onerror = () => {
-  frameFailed = true;
-};
-frame.src = "frame-1.png";
+const background = loadImg("background.png");
+const bottomRibbon = loadImg("bottom-ribbon.png");
+const topRibbon = loadImg("top-ribbon.png");
+
+let assetsReady = false;
+const assetList = [background, bottomRibbon, topRibbon];
+let loadedCount = 0;
+
+assetList.forEach((img) => {
+  img.onload = () => {
+    loadedCount++;
+    if (loadedCount === assetList.length) {
+      assetsReady = true;
+      if (userLoaded) draw();
+    }
+  };
+  img.onerror = () => {
+    showError(
+      "Something didn't load properly. Please check your internet and try again.",
+    );
+  };
+});
+
+let fontReady = false;
+if (document.fonts && document.fonts.load) {
+  document.fonts
+    .load(`${RIBBON_FONT_SIZE}px Frick`)
+    .then(() => {
+      fontReady = true;
+      if (userLoaded) draw();
+    })
+    .catch(() => {
+      fontReady = true; // fall back silently, browser default font will render instead
+    });
+} else {
+  fontReady = true;
+}
 
 /* state */
 let userImg = new Image();
@@ -63,6 +107,27 @@ function showError(msg) {
   errorToast.style.display = "block";
   setTimeout(() => (errorToast.style.display = "none"), 3000);
 }
+
+/* ---------- Name field ---------- */
+function currentName() {
+  const val = nameInput.value.trim();
+  return val.length ? val : "I";
+}
+
+function buildRibbonText() {
+  const phrase = `${currentName()} WILL BE AT TRANS 2026`.toUpperCase();
+  return Array(4).fill(phrase).join(" • ");
+}
+
+function updateCharCount() {
+  charCount.textContent = `${nameInput.value.length} / ${MAX_NAME_LENGTH}`;
+}
+
+nameInput.addEventListener("input", () => {
+  updateCharCount();
+  if (userLoaded) draw();
+});
+updateCharCount();
 
 /* ---------- Core math: constraints & draw ---------- */
 function clampTransform() {
@@ -97,11 +162,30 @@ function clampTransform() {
   }
 }
 
+function drawRibbonText(targetCtx, anchor, rf) {
+  const text = buildRibbonText();
+  const x = anchor.x * rf;
+  const y = anchor.y * rf;
+  const angleRad = (anchor.angleDeg * Math.PI) / 180;
+  const fontSize = RIBBON_FONT_SIZE * rf;
+
+  targetCtx.save();
+  targetCtx.translate(x, y);
+  targetCtx.rotate(-angleRad);
+  targetCtx.font = `${fontSize}px Frick, sans-serif`;
+  targetCtx.fillStyle = anchor.color;
+  targetCtx.textAlign = "center";
+  targetCtx.textBaseline = "alphabetic";
+  targetCtx.fillText(text, 0, 0);
+  targetCtx.restore();
+}
+
 function draw(targetCanvas = canvas, targetCtx = ctx, size = PREVIEW_SIZE) {
   if (!userLoaded) return;
 
   clampTransform();
-  const sf = size / PREVIEW_SIZE;
+  const sf = size / PREVIEW_SIZE; // scale for user photo (working in PREVIEW_SIZE coord space)
+  const rf = size / FRAME_SIZE; // scale for fixed-position layered assets (native 1280 ref)
 
   const iw_out = userImg.width * scale * sf;
   const ih_out = userImg.height * scale * sf;
@@ -111,10 +195,28 @@ function draw(targetCanvas = canvas, targetCtx = ctx, size = PREVIEW_SIZE) {
   targetCanvas.width = size;
   targetCanvas.height = size;
   targetCtx.clearRect(0, 0, size, size);
+  targetCtx.imageSmoothingEnabled = true;
+  targetCtx.imageSmoothingQuality = "high";
+
+  // 1. user photo (bottommost)
   targetCtx.drawImage(userImg, offsetX_out, offsetY_out, iw_out, ih_out);
-  if (frame.complete && frame.naturalWidth > 0) {
-    targetCtx.drawImage(frame, 0, 0, size, size);
+
+  // 2. background — has a transparent cutout revealing the photo, plus border art baked in
+  if (background.complete && background.naturalWidth > 0) {
+    targetCtx.drawImage(background, 0, 0, size, size);
   }
+
+  // 3. bottom ribbon + name text
+  if (bottomRibbon.complete && bottomRibbon.naturalWidth > 0) {
+    targetCtx.drawImage(bottomRibbon, 0, 0, size, size);
+  }
+  drawRibbonText(targetCtx, RIBBON_TEXT.bottom, rf);
+
+  // 4. top ribbon + name text
+  if (topRibbon.complete && topRibbon.naturalWidth > 0) {
+    targetCtx.drawImage(topRibbon, 0, 0, size, size);
+  }
+  drawRibbonText(targetCtx, RIBBON_TEXT.top, rf);
 }
 
 /* ---------- File handling & UI ---------- */
@@ -187,14 +289,7 @@ zoomEl.addEventListener("input", () => {
 downloadBtn.addEventListener("click", () => {
   if (!userLoaded) return;
 
-  if (frameFailed) {
-    showError(
-      "Something didn't load properly. Please check your internet and try again.",
-    );
-    return;
-  }
-
-  if (!frameLoaded) {
+  if (!assetsReady) {
     showError("Almost ready — please wait a few seconds and try again.");
     return;
   }
